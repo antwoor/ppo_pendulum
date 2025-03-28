@@ -2,7 +2,7 @@
 set -e
 set -u
 
-PROJECTNAME="daydreamer"
+PROJECTNAME="antwoor/rl:stable"
 HOMENAME=$(basename $HOME)
 
 display_flag=""
@@ -63,7 +63,7 @@ if [[ "$display_flag" = true ]]; then
     -v "${PWD}/src:/home/root/rl_ws"\
     --network=host \
     --gpus="${gpus}" \
-    --name="${PROJECTNAME}_container" \
+    --name="ppo_container" \
     ${PROJECTNAME} /bin/bash
 else
   echo "Running Docker without display"
@@ -71,6 +71,6 @@ else
     -v "${PWD}/src:/home/root/rl_ws"\
     --network=host \
     --gpus="${gpus}" \
-    --name="${PROJECTNAME}_container" \
+    --name="ppo_container" \
     ${PROJECTNAME} /bin/bash
 fi
