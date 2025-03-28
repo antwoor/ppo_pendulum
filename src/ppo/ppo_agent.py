@@ -174,10 +174,10 @@ class PPOAgent:
                 
                 # Custom reward for inverted pendulum
                 # Reward for being upright (angle close to 0)
-                angle = next_state[1] % (2*np.pi)
-                if angle > np.pi:
-                    angle = angle - 2*np.pi
-                reward = 1.0 - abs(angle)/np.pi  # Max reward when angle=0
+                angle = next_state[1]
+                #if angle > np.pi:
+                #    angle = angle - 2*np.pi
+                reward = np.cos(angle)  # Max reward when angle=0
                 
                 # Store transition
                 agent.store_transition(state, action, reward, next_state, done, log_prob)
@@ -203,7 +203,8 @@ class PPOAgent:
             if episode % 10 == 0:
                 avg_reward = np.mean(episode_rewards[-10:])
                 print(f"Episode {episode}, Avg Reward: {avg_reward:.2f}")
-                
+                if episode %500 ==0:
+                    torch.save(self.policy.state_dict(), f"weights/ppo_{episode}.pth")
                 # Early stopping if we've solved the environment
                 #if avg_reward >= 190:
                 #    print("Environment solved!")

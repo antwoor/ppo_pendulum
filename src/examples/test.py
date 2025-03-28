@@ -102,7 +102,7 @@ import mujoco.viewer
 
 env = InvertedPendulumEnv()
 agent = PPO.PPOAgent(env, lr=3e-4, hidden_dim=128)
-agent.train_ppo(env, agent, episodes=500)
+agent.train_ppo(env, agent, episodes=15000)
 
 
 
@@ -120,5 +120,15 @@ agent.train_ppo(env, agent, episodes=500)
 #        target_pos = [np.random.rand() - 0.5, 0, 0.6]
 #        env.draw_ball(target_pos, radius=0.05)
 #        last_update = env.current_time
-#    ob, reward, terminated = env.step(np.random.rand() - 0.5)
+#    ob, reward, terminated = env.step(0)
 #    time.sleep(0.01)
+#    angle = ob[1] 
+#    #if angle > np.pi:
+#    #    angle = angle - 2*np.pi
+#    reward = np.cos(angle) #- 0.0001*action.^2
+#    print(reward) 
+
+#angle = next_state[1]
+##if angle > np.pi:
+##    angle = angle - 2*np.pi
+#reward = np.cos(angle)  # Max reward when angle=0
