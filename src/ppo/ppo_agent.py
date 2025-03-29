@@ -247,7 +247,7 @@ class PPOAgent:
 
                     # Компоненты награды:
                     angle_reward = np.cos(angle)  # Награда за вертикальное положение (1 когда angle=0)
-                    distance_reward = 0.5 * np.exp(-distance_to_target)  # Награда за приближение к цели
+                    distance_reward = 0.1 * np.exp(-distance_to_target)  # Награда за приближение к цели
                     #action_penalty = 0.01 * (action**2)[0]  # Штраф за большие действия
 
                     # Итоговая награда
