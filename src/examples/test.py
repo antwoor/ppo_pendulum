@@ -113,20 +113,22 @@ agent.train_ppo(env, agent, episodes=15000)
 
 
 
-"""ОРИГИНАЛЬНЫЙ ПАЙПЛАЙН"""
-#last_update = 0
-#while env.current_time < 5000:
-#    if env.current_time - last_update > 5:
-#        target_pos = [np.random.rand() - 0.5, 0, 0.6]
-#        env.draw_ball(target_pos, radius=0.05)
-#        last_update = env.current_time
-#    ob, reward, terminated = env.step(0)
-#    time.sleep(0.01)
-#    angle = ob[1] 
-#    #if angle > np.pi:
-#    #    angle = angle - 2*np.pi
-#    reward = np.cos(angle) #- 0.0001*action.^2
-#    print(reward) 
+# """ОРИГИНАЛЬНЫЙ ПАЙПЛАЙН"""
+# last_update = 0
+# action = 0
+# while env.current_time < 5000:
+#     if env.current_time - last_update > 5:
+#         target_pos = [np.random.rand() - 0.5, 0, 0.6]
+#         env.draw_ball(target_pos, radius=0.05)
+#         last_update = env.current_time
+#     ob, reward, terminated = env.step(action)
+#     action, _ =agent.act(ob)
+#     time.sleep(0.01)
+#     angle = ob[1] 
+#     #if angle > np.pi:
+#     #    angle = angle - 2*np.pi
+#     reward = np.cos(angle) #- 0.0001*action.^2
+#     print(reward) 
 
 #angle = next_state[1]
 ##if angle > np.pi:

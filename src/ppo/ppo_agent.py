@@ -41,7 +41,7 @@ class PPONetwork(nn.Module):
 
 class PPOAgent:
     def __init__(self, env, gamma=0.99, lr=3e-4, clip_epsilon=0.2, 
-                 epochs=10, batch_size=64, hidden_dim=64):
+                 epochs=10, batch_size=64, hidden_dim=64, load_path=None):
         self.env = env
         self.gamma = gamma
         self.clip_epsilon = clip_epsilon
@@ -54,7 +54,10 @@ class PPOAgent:
         
         self.policy = PPONetwork(obs_dim, act_dim, hidden_dim)
         self.old_policy = PPONetwork(obs_dim, act_dim, hidden_dim)
-        self.old_policy.load_state_dict(self.policy.state_dict())
+        if load_path is not None:
+            self.load_model(load_path)
+        else:
+            self.old_policy.load_state_dict(self.policy.state_dict())
         
         self.optimizer = optim.Adam(self.policy.parameters(), lr=lr)
         
@@ -65,7 +68,14 @@ class PPOAgent:
         self.next_states = []
         self.dones = []
         self.log_probs = []
-        
+
+    def load_model(self, path):
+        """Загружает сохранённые веса модели"""
+        checkpoint = torch.load(path)
+        self.policy.load_state_dict(checkpoint)
+        self.old_policy.load_state_dict(checkpoint)
+        print(f"Loaded model weights from {path}")
+
     def act(self, state):
         state = torch.FloatTensor(state).unsqueeze(0)
         with torch.no_grad():
