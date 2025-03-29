@@ -168,58 +168,118 @@ class PPOAgent:
         # Update old policy
         self.old_policy.load_state_dict(self.policy.state_dict())
 
-    def train_ppo(self, env, agent, episodes=1000, max_steps=500, update_freq=2048):
+    def train_ppo(self, env, agent, episodes=1000, max_steps=500, update_freq=2048, dynamic = False, freq = None):
         episode_rewards = []
-        
-        for episode in range(episodes):
-            state = env.reset_model()
-            episode_reward = 0
-            
-            for step in range(max_steps):
-                # Get action
-                action, log_prob = agent.act(state)
+        if not dynamic:
+            for episode in range(episodes):
+                state = env.reset_model()
+                episode_reward = 0
                 
-                # Take step
-                next_state, reward, done = env.step([action])
+                for step in range(max_steps):
+                    # Get action
+                    action, log_prob = agent.act(state)
+                    
+                    # Take step
+                    next_state, reward, done = env.step([action])
+                    
+                    # Custom reward for inverted pendulum
+                    # Reward for being upright (angle close to 0)
+                    angle = next_state[1]
+                    #if angle > np.pi:
+                    #    angle = angle - 2*np.pi
+                    reward = np.cos(angle)  # Max reward when angle=0
+                    
+                    # Store transition
+                    agent.store_transition(state, action, reward, next_state, done, log_prob)
+                    
+                    state = next_state
+                    episode_reward += reward
+                    
+                    # Render occasionally
+                    if episode % 10 == 0:
+                        env.draw_ball([0, 0, 0.5], color=[0, 1, 0, 1], radius=0.05)
+                        time.sleep(0.01)
+                    
+                    # Update if we have enough samples
+                    if len(agent.states) >= update_freq:
+                        agent.update()
+                    
+                    if done:
+                        break
+                        
+                episode_rewards.append(episode_reward)
                 
-                # Custom reward for inverted pendulum
-                # Reward for being upright (angle close to 0)
-                angle = next_state[1]
-                #if angle > np.pi:
-                #    angle = angle - 2*np.pi
-                reward = np.cos(angle)  # Max reward when angle=0
-                
-                # Store transition
-                agent.store_transition(state, action, reward, next_state, done, log_prob)
-                
-                state = next_state
-                episode_reward += reward
-                
-                # Render occasionally
+                # Print progress
                 if episode % 10 == 0:
-                    env.draw_ball([0, 0, 0.5], color=[0, 1, 0, 1], radius=0.05)
-                    time.sleep(0.01)
-                
-                # Update if we have enough samples
-                if len(agent.states) >= update_freq:
-                    agent.update()
-                
-                if done:
-                    break
-                    
-            episode_rewards.append(episode_reward)
-            
-            # Print progress
-            if episode % 10 == 0:
-                avg_reward = np.mean(episode_rewards[-10:])
-                print(f"Episode {episode}, Avg Reward: {avg_reward:.2f}")
-                if episode %500 ==0:
-                    torch.save(self.policy.state_dict(), f"weights/ppo_{episode}.pth")
-                # Early stopping if we've solved the environment
-                #if avg_reward >= 190:
-                #    print("Environment solved!")
-                #    break
-                    
+                    avg_reward = np.mean(episode_rewards[-10:])
+                    print(f"Episode {episode}, Avg Reward: {avg_reward:.2f}")
+                    if episode %500 ==0:
+                        torch.save(self.policy.state_dict(), f"weights/ppo_{episode}.pth")
+        else:
+            for episode in range(episodes):
+                state = env.reset_model()
+                episode_reward = 0
+                target_update_freq = 100 if freq is None else freq  # Каждые 100 эпизодов меняем цель
+
+                # Генерируем новую цель (шарик) каждые target_update_freq эпизодов
+                if episode % target_update_freq == 0:
+                    target_pos = [np.random.rand() - 0.5, 0, 0.6]
+
+                # Визуализируем цель
+                env.draw_ball(target_pos, color=[1, 0, 0, 1], radius=0.05)
+
+                for step in range(max_steps):
+                    # Получаем действие от агента
+                    action, log_prob = agent.act(state)
+
+                    # Выполняем шаг в среде
+                    next_state, _, done = env.step([action])
+
+                    # Вычисляем угол колонны
+                    angle = next_state[1] % (2*np.pi)
+                    if angle > np.pi:
+                        angle -= 2*np.pi
+
+                    # Вычисляем расстояние до цели
+                    cart_position = next_state[0]
+                    #print("cart pos", cart_position, "ball_pos", env.ball_position[0])
+                    distance_to_target = abs(cart_position - env.ball_position[0])
+
+                    # Компоненты награды:
+                    angle_reward = np.cos(angle)  # Награда за вертикальное положение (1 когда angle=0)
+                    distance_reward = 0.5 * np.exp(-distance_to_target)  # Награда за приближение к цели
+                    #action_penalty = 0.01 * (action**2)[0]  # Штраф за большие действия
+
+                    # Итоговая награда
+                    reward = angle_reward + distance_reward #- action_penalty
+
+                    # Сохраняем переход
+                    agent.store_transition(state, action, reward, next_state, done, log_prob)
+
+                    state = next_state
+                    episode_reward += reward
+
+                    # Визуализация (реже, чтобы не замедлять обучение)
+                    if episode % 50 == 0:
+                        env.draw_ball(target_pos, color=[1, 0, 0, 1], radius=0.05)
+                        time.sleep(0.01)
+
+                    # Обновляем политику, если накопили достаточно данных
+                    if len(agent.states) >= update_freq:
+                        agent.update()
+
+                    if done:
+                        break
+
+                episode_rewards.append(episode_reward)
+
+                # Логирование и сохранение
+                if episode % 10 == 0:
+                    avg_reward = np.mean(episode_rewards[-10:])
+                    print(f"Episode {episode}, Avg Reward: {avg_reward:.2f}, Target X: {target_pos[0]:.2f}")
+
+                if episode % 500 == 0:
+                    torch.save(agent.policy.state_dict(), f"dynamic_weights/ppo_{episode}.pth")
         return episode_rewards
 
 # Initialize environment and agent
