@@ -168,7 +168,7 @@ class PPOAgent:
         # Update old policy
         self.old_policy.load_state_dict(self.policy.state_dict())
 
-    def train_ppo(self, env, agent, episodes=1000, max_steps=500, update_freq=2048, dynamic = False, freq = None):
+    def train_ppo(self, env, agent, episodes=1000, max_steps=500, update_freq=2048, dynamic = False, freq = None, act_k=0, pos_k=0):
         episode_rewards = []
         if not dynamic:
             for episode in range(episodes):
@@ -216,6 +216,8 @@ class PPOAgent:
                     if episode %500 ==0:
                         torch.save(self.policy.state_dict(), f"weights/ppo_{episode}.pth")
         else:
+            act_k=1
+            pos_k=1
             for episode in range(episodes):
                 state = env.reset_model()
                 episode_reward = 0
@@ -236,9 +238,7 @@ class PPOAgent:
                     next_state, _, done = env.step([action])
 
                     # Вычисляем угол колонны
-                    angle = next_state[1] % (2*np.pi)
-                    if angle > np.pi:
-                        angle -= 2*np.pi
+                    angle = next_state[1]
 
                     # Вычисляем расстояние до цели
                     cart_position = next_state[0]
@@ -247,11 +247,21 @@ class PPOAgent:
 
                     # Компоненты награды:
                     angle_reward = np.cos(angle)  # Награда за вертикальное положение (1 когда angle=0)
-                    distance_reward = 0.1 * np.exp(-distance_to_target)  # Награда за приближение к цели
-                    #action_penalty = 0.01 * (action**2)[0]  # Штраф за большие действия
+                    distance_reward = 1 * np.exp(-distance_to_target)  # Награда за приближение к цели
+                    action_penalty = 0.1 * (next_state[2]**2)  # Штраф за большие скорости
 
-                    # Итоговая награда
-                    reward = angle_reward + distance_reward #- action_penalty
+                    ## Итоговая награда
+                    #if episode <7000:
+                    #    pos_k=0
+                    #    act_k=0
+                    #elif episode > 7000 and episode <10000:
+                    #    pos_k=1
+                    #    act_k=0
+                    #elif episode >10000:
+                    #    act_k=1
+                    #    pos_k=1
+
+                    reward = 10*angle_reward + pos_k*distance_reward - act_k*action_penalty
 
                     # Сохраняем переход
                     agent.store_transition(state, action, reward, next_state, done, log_prob)
@@ -276,7 +286,7 @@ class PPOAgent:
                 # Логирование и сохранение
                 if episode % 10 == 0:
                     avg_reward = np.mean(episode_rewards[-10:])
-                    print(f"Episode {episode}, Avg Reward: {avg_reward:.2f}, Target X: {target_pos[0]:.2f}")
+                    print(f"Episode {episode}, Avg Reward: {avg_reward:.2f},angle_r: {10*angle_reward:.2f}, dist_r: {pos_k*distance_reward:.2f}, act_pen: {act_k*action_penalty:.2f}")
 
                 if episode % 500 == 0:
                     torch.save(agent.policy.state_dict(), f"dynamic_weights/ppo_{episode}.pth")
