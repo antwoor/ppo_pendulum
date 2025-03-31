@@ -7,7 +7,7 @@ Reinforcement learning agent using PPO to:
 3. Optimize control efficiency
 
 # agent after 4500 episodes and 10 epochs of training.
-![Trained Agent](media/4500_ppo.gif)
+![Trained Agent](media/5500_ppo.gif)
 
 ## Requirements
 - numpy>=1.26.4

@@ -107,7 +107,7 @@ import mujoco.viewer
 
 env = InvertedPendulumEnv()
 #print(ob.size)#print(ob[3]) # [2] - скорость слайда 3 - скорость колонны 
-agent = PPO.PPOAgent(env, lr=3e-4, hidden_dim=128, load_path='good_dynamic_weights/ppo_4500.pth')
+agent = PPO.PPOAgent(env, lr=3e-4, hidden_dim=128, load_path='good_dynamic_weights/ppo_5500_7751.pth')
 #agent.train_ppo(env, agent, episodes=150000, dynamic=True)
 
 """ОРИГИНАЛЬНЫЙ ПАЙПЛАЙН"""
