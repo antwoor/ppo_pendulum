@@ -3,13 +3,13 @@ from setuptools import setup, find_packages
 setup(
     name="ppo",
     version="0.1.0",
-    packages=find_packages(where="ppo"),
-    package_dir={"": "src"},
+    packages=find_packages(),
+    #package_dir={"": "ppo"},
     
     install_requires=[
         "numpy>=1.26.4",
         "torch>=2.5.1",
-        "mujoco>=3.3.0",  # Если используете MuJoCo
+        "mujoco>=3.3.0",  
     ],
     
     # Необязательные зависимости
@@ -21,8 +21,8 @@ setup(
     },
     
     # Метаданные
-    author="Your Name",
-    author_email="your.email@example.com",
+    author="Geroyev Alexander",
+    author_email="geroev_sasha@mail.ru",
     description="PPO implementation for inverted pendulum control",
     license="MIT",
     keywords="reinforcement-learning ppo mujoco",

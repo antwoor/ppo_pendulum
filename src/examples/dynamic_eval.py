@@ -4,8 +4,6 @@ pip install mujoco numpy
 """
 
 import numpy as np
-import sys 
-sys.path.append('..')
 import ppo.ppo_agent as PPO
 
 class InvertedPendulumEnv:
@@ -109,23 +107,14 @@ import mujoco.viewer
 
 env = InvertedPendulumEnv()
 #print(ob.size)#print(ob[3]) # [2] - скорость слайда 3 - скорость колонны 
-agent = PPO.PPOAgent(env, lr=3e-4, hidden_dim=128, load_path='dynamic_weights/ppo_11000.pth')
+agent = PPO.PPOAgent(env, lr=3e-4, hidden_dim=128, load_path='good_dyn/ppo_11000.pth')
 #agent.train_ppo(env, agent, episodes=150000, dynamic=True)
-
-
-
-
-
-
-
-
-
 
 """ОРИГИНАЛЬНЫЙ ПАЙПЛАЙН"""
 last_update = 0
 action = 0
 while env.current_time < 5000:
-    if env.current_time - last_update > 25:
+    if env.current_time - last_update > 5:
         target_pos = [np.random.rand() - 0.5, 0, 0.6]
         env.draw_ball(target_pos, radius=0.05)
         last_update = env.current_time
