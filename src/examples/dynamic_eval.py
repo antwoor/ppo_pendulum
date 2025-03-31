@@ -107,7 +107,7 @@ import mujoco.viewer
 
 env = InvertedPendulumEnv()
 #print(ob.size)#print(ob[3]) # [2] - скорость слайда 3 - скорость колонны 
-agent = PPO.PPOAgent(env, lr=3e-4, hidden_dim=128, load_path='good_dyn/ppo_11000.pth')
+agent = PPO.PPOAgent(env, lr=3e-4, hidden_dim=128, load_path='dynamic_weights/ppo_2109_5065.pth')
 #agent.train_ppo(env, agent, episodes=150000, dynamic=True)
 
 """ОРИГИНАЛЬНЫЙ ПАЙПЛАЙН"""
@@ -121,12 +121,7 @@ while env.current_time < 5000:
     ob, reward, terminated = env.step(action)
     action, _ =agent.act(ob)
     time.sleep(0.01)
-    angle = ob[1] 
-    #if angle > np.pi:
-    #    angle = angle - 2*np.pi
-    reward = np.cos(angle) #- 0.0001*action.^2
-    #print(reward, "action", action) 
-    print(ob)
+
 #angle = next_state[1]
 ##if angle > np.pi:
 ##    angle = angle - 2*np.pi
