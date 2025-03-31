@@ -1,9 +1,6 @@
-import numpy as np
 import torch
 import torch.nn as nn
-import torch.optim as optim
 from torch.distributions import Normal
-import torch.nn.functional as F
 
 class PPONetwork(nn.Module):
     def __init__(self, input_dim, output_dim, hidden_dim=64):

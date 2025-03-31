@@ -5,6 +5,7 @@ import torch.optim as optim
 from torch.distributions import Normal
 import torch.nn.functional as F
 import time
+#from model import PPONetwork, nn, torch
 
 class PPONetwork(nn.Module):
     def __init__(self, input_dim, output_dim, hidden_dim=64):
@@ -242,26 +243,16 @@ class PPOAgent:
 
                     # Вычисляем расстояние до цели
                     cart_position = next_state[0]
-                    #print("cart pos", cart_position, "ball_pos", env.ball_position[0])
+
                     distance_to_target = abs(cart_position - env.ball_position[0])
 
                     # Компоненты награды:
                     angle_reward = np.cos(angle)  # Награда за вертикальное положение (1 когда angle=0)
-                    distance_reward = 1 * np.exp(-distance_to_target)  # Награда за приближение к цели
-                    action_penalty = 0.1 * (next_state[2]**2)  # Штраф за большие скорости
+                    distance_reward = 10 * np.exp(-distance_to_target)  # Награда за приближение к цели
+                    action_penalty = 0.5 * (next_state[2]**2)  # Штраф за большие скорости
 
-                    ## Итоговая награда
-                    #if episode <7000:
-                    #    pos_k=0
-                    #    act_k=0
-                    #elif episode > 7000 and episode <10000:
-                    #    pos_k=1
-                    #    act_k=0
-                    #elif episode >10000:
-                    #    act_k=1
-                    #    pos_k=1
-
-                    reward = 10*angle_reward + pos_k*distance_reward - act_k*action_penalty
+                    #reward = 10*angle_reward + pos_k*distance_reward - 5*distance_to_target if angle_reward >0 else 10*angle_reward - act_k*action_penalty
+                    reward = 10*angle_reward + pos_k*distance_reward - 5*distance_to_target - act_k*action_penalty
 
                     # Сохраняем переход
                     agent.store_transition(state, action, reward, next_state, done, log_prob)
@@ -286,14 +277,15 @@ class PPOAgent:
                 # Логирование и сохранение
                 if episode % 10 == 0:
                     avg_reward = np.mean(episode_rewards[-10:])
-                    print(f"Episode {episode}, Avg Reward: {avg_reward:.2f},angle_r: {10*angle_reward:.2f}, dist_r: {pos_k*distance_reward:.2f}, act_pen: {act_k*action_penalty:.2f}")
+                    print(f"Episode {episode}, Avg Reward: {avg_reward:.2f},angle_r: {10*angle_reward:.2f}, dist_r: {pos_k*distance_reward:.2f}, {env.ball_position[0]:.2f}")
 
-                if episode % 500 == 0:
-                    torch.save(agent.policy.state_dict(), f"dynamic_weights/ppo_{episode}.pth")
+                if episode % 500 == 0 or avg_reward > 5000:
+                    torch.save(agent.policy.state_dict(), f"dynamic_weights/ppo_{episode}_{avg_reward}.pth")
         return episode_rewards
 
 # Initialize environment and agent
 if __name__ =='__main__':
+    from examples.dynamic_test import InvertedPendulumEnv
     env = InvertedPendulumEnv()
     agent = PPOAgent(env, lr=3e-4, hidden_dim=128)
 
