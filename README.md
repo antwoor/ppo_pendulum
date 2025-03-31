@@ -27,6 +27,14 @@ pip install -e .
 cd src/examples
 python3 dynamic_test.py
 ```
+## Run in docker
+```bash
+bash run.sh -g all -d true
+pip install -e .
+cd examples
+python3 dynamic_eval.py #or dynamic_test.py
+```
+
 ## evaling good agent
 ```bash
 cd src/examples
